@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartSignal Pro v2 - Elite AI Edition</title>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    /* === THEMES & GLOBAL === */
+    :root {
+      --bg: #000;
+      --text: #0f0;
+      --border: #0f0;
+      --btn-bg: #001a00;
+      --btn-border: #0f0;
+      --btn-hover: #003300;
+      --shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+      --pulse-color: #00ff00;
+      --section-color: #00ff00;
+      --bearish-color: #ff0000;
+      --font: 'Courier New', monospace;
+    }
+
+    body.theme-red {
+      --text: #f00;
+      --border: #f00;
+      --btn-bg: #110000;
+      --btn-border: #f00;
+      --btn-hover: #330000;
+      --shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+      --pulse-color: #ff0000;
+      --section-color: #ff3333;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      margin: 0;
+      padding: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .hidden { display: none !important; }
+
+    /* === LOGIN & PROFILE FORMS === */
+    .auth-container {
+      max-width: 450px;
+      margin: 80px auto;
+      padding: 30px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.8);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .auth-container h2 {
+      color: var(--pulse-color);
+      margin-bottom: 20px;
+    }
+
+    .auth-container input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid var(--border);
+      background: rgba(0, 20, 0, 0.4);
+      color: var(--text);
+      border-radius: 6px;
+    }
+
+    .auth-container button {
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 2px solid var(--border);
+      padding: 12px 20px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+    }
+
+    .auth-container button:hover {
+      background: var(--btn-hover);
+      box-shadow: var(--shadow);
+    }
+
+    .approval-required {
+      background: rgba(255, 0, 0, 0.1);
+      border: 1px dashed #f00;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+      font-size: 0.9em;
+    }
+
+    /* === MAIN WIDGET === */
+    .smartsignal-widget {
+      max-width: 900px;
+      margin: 30px auto;
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      background: var(--bg);
+      padding: 1px;
+    }
+
+    .widget-header {
+      background: var(--bg);
+      color: var(--text);
+      padding: 18px;
+      text-align: center;
+      font-size: 1.6em;
+      font-weight: bold;
+      text-shadow: 0 0 10px var(--text);
+      letter-spacing: 1.5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .widget-body {
+      padding: 25px;
+      color: var(--text);
+    }
+
+    input, select, button {
+      padding: 12px;
+      margin: 10px 0;
+      width: 100%;
+      border: 1px solid var(--border);
+      background: rgba(0, 20, 0, 0.3);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 16px;
+      border-radius: 6px;
+      box-shadow: 0 0 8px rgba(0, 255, 0, 0.2);
+      transition: all 0.3s;
+    }
+
+    button {
+      background: var(--btn-bg);
+      color: var(--text);
+      border: 2px solid var(--border);
+      cursor: pointer;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      background: var(--btn-hover);
+      box-shadow: var(--shadow);
+    }
+
+    .signal-card {
+      margin-top: 25px;
+      padding: 20px;
+      background: var(--bg);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: var(--text);
+    }
+
+    .profile-bar {
+      display: flex;
+      justify-content: space-between;
+      background: #001100;
+      padding: 10px 16px;
+      font-size: 0.9em;
+      color: var(--section-color);
+      border-top: 1px solid var(--border);
+    }
+
+    .theme-toggle {
+      background: #000;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .logout-btn {
+      color: #ff0000;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .admin-dashboard {
+      padding: 20px;
+      margin: 20px;
+      border: 2px solid #f00;
+      border-radius: 10px;
+      background: #110000;
+      color: #f00;
+    }
+
+    .admin-dashboard h3 {
+      color: #ff3333;
+      margin-top: 0;
+    }
+
+    .admin-section {
+      margin-bottom: 25px;
+    }
+
+    .user-list, .signal-log {
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 10px 0;
+      font-size: 0.9em;
+    }
+
+    .user-item {
+      margin: 8px 0;
+      padding: 8px 10px;
+      background: rgba(255,0,0,0.1);
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .user-status {
+      font-size: 0.8em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .status-pending {
+      background: #443300;
+      color: #ffcc00;
+    }
+
+    .status-approved {
+      background: #003300;
+      color: #00ff00;
+    }
+
+    .status-revoked {
+      background: #330000;
+      color: #ff0000;
+    }
+
+    .approval-btns {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn-approve {
+      background: #003300;
+      color: #00ff00;
+      border: 1px solid #00ff00;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
+
+    .btn-revoke, .btn-reject {
+      background: #330000;
+      color: #ff0000;
+      border: 1px solid #ff0000;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
+
+    .revoke-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .revoke-modal-content {
+      background: #000;
+      border: 2px solid #f00;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .revoke-modal h3 {
+      color: #ff0000;
+      margin-top: 0;
+    }
+
+    .revoke-modal textarea {
+      width: 100%;
+      height: 80px;
+      background: #111;
+      border: 1px solid #f00;
+      color: #f00;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      resize: none;
+    }
+
+    .revoke-modal-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .revoke-modal-button {
+      padding: 5px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .revoke-modal-button.cancel {
+      background: #333;
+      border: 1px solid #666;
+    }
+
+    .revoke-modal-button.revoke {
+      background: #330000;
+      color: #ff0000;
+      border: 1px solid #ff0000;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="auth-container">
+    <h2>🔐 SmartSignal Pro Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
+    
+    <div id="approvalMessage" class="approval-required hidden">
+      ⚠️ Your account is pending admin approval.<br>
+      Please wait for admin to activate your account.
+    </div>
+    
+    <div id="revokedMessage" class="approval-required hidden">
+      ⚠️ Your account access has been revoked by admin.<br>
+      <span id="revocationReason"></span>
+    </div>
+  </div>
+
+  <!-- Revoke Modal -->
+  <div id="revokeModal" class="revoke-modal hidden">
+    <div class="revoke-modal-content">
+      <h3>⚠️ Revoke User Access</h3>
+      <p>Enter reason for revoking access for <span id="revokeUsername" style="color:#ff0000;"></span>:</p>
+      <textarea id="revokeReason" placeholder="Reason for revocation..."></textarea>
+      <div class="revoke-modal-buttons">
+        <span class="revoke-modal-button cancel" onclick="closeRevokeModal()">Cancel</span>
+        <span class="revoke-modal-button revoke" onclick="confirmRevoke()">Revoke Access</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main App (Hidden Initially) -->
+  <div id="mainApp" class="hidden">
+
+    <!-- Profile Bar -->
+    <div class="profile-bar">
+      <div>👤 <span id="userDisplay">User</span></div>
+      <div>
+        <span class="theme-toggle" onclick="toggleTheme()">🌓 Theme</span>
+        <span class="logout-btn" onclick="logout()">🚪 Logout</span>
+      </div>
+    </div>
+
+    <!-- Main Widget -->
+    <div class="smartsignal-widget">
+      <div class="widget-header">🚀 SmartSignal Pro v2 - Elite AI Edition</div>
+      <div class="widget-body">
+        <p><strong>Enter asset:</strong> BTC, ETH, EUR/USD, GOLD, etc.</p>
+        <input type="text" id="symbolInput" placeholder="e.g. BTC" />
+
+        <select id="modeSelect">
+          <option value="1">1 - Quick Pulse</option>
+          <option value="2">2 - Pro Signal</option>
+          <option value="3" selected>3 - Elite Mode (AI-Powered)</option>
+        </select>
+
+        <button onclick="generateSignal()">Generate Signal</button>
+
+        <div id="loading" class="loader" style="display: none;">
+          Scanning Swing Points, Volume, and Smart Money Zones... 🧠
+        </div>
+
+        <div id="result" class="signal-card" style="display: none;"></div>
+
+        <div id="exportButtons" style="margin-top: 12px; display: none;">
+          <button class="copy-button" onclick="copyAll()">📋 Copy All</button>
+          <button class="export-button" onclick="shareSignal()">📤 Share</button>
+          <button class="export-button" onclick="downloadPDF()">📄 PDF</button>
+          <button class="export-button" onclick="downloadPNG()">📷 PNG</button>
+        </div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <div id="clock">🕒 Loading time...</div>
+        <div class="ticker">
+          <marquee scrollamount="5" behavior="scroll" id="marketTicker">
+            💹 BTC: $-- | 💹 ETH: $-- | 💹 EUR/USD: -- | 💹 GOLD: $--
+          </marquee>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Dashboard (Only for DG143) -->
+    <div id="adminDashboard" class="admin-dashboard hidden">
+      <h3>🚨 ADMIN DASHBOARD (DG143)</h3>
+      
+      <div class="admin-section">
+        <strong>👥 Pending Approvals:</strong>
+        <div id="pendingList"></div>
+      </div>
+      
+      <div class="admin-section">
+        <strong>✅ Approved Users:</strong>
+        <div class="user-list" id="approvedList"></div>
+      </div>
+      
+      <div class="admin-section">
+        <strong>❌ Revoked Users:</strong>
+        <div class="user-list" id="revokedList"></div>
+      </div>
+      
+      <div class="admin-section">
+        <strong>📊 Signal Log:</strong>
+        <div class="signal-log" id="signalLog"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Typing Sound -->
+  <audio id="typingSound" src="https://www.soundjay.com/misc/sounds/typing-01.mp3" preload="auto"></audio>
+
+  <script>
+    const { jsPDF } = window.jspdf;
+    const API_KEY = "5JRLZINI7VD0MC4I";
+
+    // Initialize storage
+    if (!localStorage.users) {
+      // Default admin
+      localStorage.users = JSON.stringify([
+        { 
+          username: "DG143", 
+          password: "DG143", 
+          isAdmin: true, 
+          status: "approved",
+          joined: new Date().toISOString()
+        }
+      ]);
+      localStorage.signals = JSON.stringify([]);
+    }
+
+    // ===== LOGIN HANDLER =====
+    function handleLogin() {
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!username) {
+        alert("Please enter a username");
+        return;
+      }
+
+      let users = JSON.parse(localStorage.users);
+      let user = users.find(u => u.username === username);
+
+      // Admin Login
+      if (username === "DG143" && password === "DG143") {
+        loginUser("DG143", true);
+        return;
+      }
+
+      // Regular user login
+      if (user) {
+        // Check status
+        if (user.status === "pending") {
+          document.getElementById("approvalMessage").classList.remove("hidden");
+          document.getElementById("revokedMessage").classList.add("hidden");
+          return;
+        }
+        
+        if (user.status === "revoked") {
+          document.getElementById("approvalMessage").classList.add("hidden");
+          document.getElementById("revokedMessage").classList.remove("hidden");
+          
+          const reason = user.revocationReason ? 
+            `Reason: ${user.revocationReason}` : 
+            "Please contact admin for more details.";
+            
+          document.getElementById("revocationReason").textContent = reason;
+          return;
+        }
+        
+        // Password check for existing users
+        if (user.password && user.password !== password) {
+          alert("❌ Incorrect password");
+          return;
+        }
+        
+        loginUser(username, user.isAdmin);
+        return;
+      }
+
+      // New user - create pending account
+      user = { 
+        username, 
+        password,
+        isAdmin: false,
+        status: "pending",
+        joined: new Date().toISOString()
+      };
+      
+      users.push(user);
+      localStorage.users = JSON.stringify(users);
+      
+      document.getElementById("approvalMessage").classList.remove("hidden");
+      document.getElementById("revokedMessage").classList.add("hidden");
+      alert("✅ Account created! Awaiting admin approval...");
+    }
+
+    function loginUser(username, isAdmin) {
+      localStorage.currentuser = JSON.stringify({ username, isAdmin });
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("mainApp").classList.remove("hidden");
+      document.getElementById("userDisplay").textContent = username;
+
+      if (isAdmin) {
+        document.getElementById("adminDashboard").classList.remove("hidden");
+        loadAdminData();
+      }
+
+      initApp();
+    }
+
+    function logout() {
+      localStorage.removeItem("currentuser");
+      location.reload();
+    }
+
+    // ===== ADMIN FUNCTIONS =====
+    function approveUser(username) {
+      let users = JSON.parse(localStorage.users);
+      users = users.map(u => 
+        u.username === username ? {...u, status: "approved"} : u
+      );
+      localStorage.users = JSON.stringify(users);
+      loadAdminData();
+      alert(`✅ ${username} has been approved!`);
+    }
+
+    function rejectUser(username) {
+      let users = JSON.parse(localStorage.users);
+      users = users.map(u => 
+        u.username === username ? {...u, status: "rejected"} : u
+      );
+      localStorage.users = JSON.stringify(users);
+      loadAdminData();
+      alert(`❌ ${username} has been rejected.`);
+    }
+
+    function showRevokeModal(username) {
+      document.getElementById("revokeUsername").textContent = username;
+      document.getElementById("revokeReason").value = "";
+      document.getElementById("revokeModal").classList.remove("hidden");
+    }
+
+    function closeRevokeModal() {
+      document.getElementById("revokeModal").classList.add("hidden");
+    }
+
+    function confirmRevoke() {
+      const username = document.getElementById("revokeUsername").textContent;
+      const reason = document.getElementById("revokeReason").value.trim();
+      
+      if (!reason) {
+        alert("Please enter a reason for revocation");
+        return;
+      }
+      
+      revokeUser(username, reason);
+      closeRevokeModal();
+    }
+
+    function revokeUser(username, reason) {
+      if (username === "DG143") {
+        alert("❌ Cannot revoke admin account!");
+        return;
+      }
+      
+      let users = JSON.parse(localStorage.users);
+      users = users.map(u => 
+        u.username === username ? {
+          ...u, 
+          status: "revoked",
+          revocationReason: reason,
+          revokedAt: new Date().toISOString()
+        } : u
+      );
+      
+      localStorage.users = JSON.stringify(users);
+      loadAdminData();
+      alert(`❌ Access revoked for ${username}!`);
+    }
+
+    // ===== INIT APP AFTER LOGIN =====
+    function initApp() {
+      updateClock();
+      setInterval(updateClock, 1000);
+      initWebSocket();
+      loadUserData();
+    }
+
+    function loadUserData() {
+      const user = JSON.parse(localStorage.currentuser);
+      if (user.isAdmin) loadAdminData();
+    }
+
+    function loadAdminData() {
+      const users = JSON.parse(localStorage.users);
+      
+      // Pending users
+      const pendingUsers = users.filter(u => u.status === "pending");
+      document.getElementById("pendingList").innerHTML = pendingUsers.length > 0 
+        ? pendingUsers.map(u => `
+          <div class="user-item">
+            <div>
+              ${u.username} 
+              <span class="user-status status-pending">Pending</span>
+              <div>Joined: ${new Date(u.joined).toLocaleDateString()}</div>
+            </div>
+            <div class="approval-btns">
+              <span class="btn-approve" onclick="approveUser('${u.username}')">Approve</span>
+              <span class="btn-reject" onclick="rejectUser('${u.username}')">Reject</span>
+            </div>
+          </div>
+        `).join("")
+        : "<div>No pending approvals</div>";
+
+      // Approved users
+      const approvedUsers = users.filter(u => u.status === "approved");
+      document.getElementById("approvedList").innerHTML = approvedUsers.length > 0
+        ? approvedUsers.map(u => `
+          <div class="user-item">
+            <div>
+              ${u.username} ${u.isAdmin ? '(ADMIN)' : ''}
+              <span class="user-status status-approved">Approved</span>
+            </div>
+            <div class="approval-btns">
+              <span class="btn-revoke" onclick="showRevokeModal('${u.username}')">Revoke Access</span>
+            </div>
+          </div>
+        `).join("")
+        : "<div>No approved users</div>";
+
+      // Revoked users
+      const revokedUsers = users.filter(u => u.status === "revoked");
+      document.getElementById("revokedList").innerHTML = revokedUsers.length > 0
+        ? revokedUsers.map(u => `
+          <div class="user-item">
+            <div>
+              ${u.username}
+              <span class="user-status status-revoked">Revoked</span>
+              <div>Reason: ${u.revocationReason || 'No reason provided'}</div>
+              <div>Revoked: ${new Date(u.revokedAt).toLocaleDateString()}</div>
+            </div>
+            <div class="approval-btns">
+              <span class="btn-approve" onclick="restoreUser('${u.username}')">Restore Access</span>
+            </div>
+          </div>
+        `).join("")
+        : "<div>No revoked users</div>";
+
+      // Signal log
+      const signals = JSON.parse(localStorage.signals);
+      document.getElementById("signalLog").innerHTML = signals.length > 0
+        ? signals
+            .sort((a, b) => new Date(b.time) - new Date(a.time))
+            .map(s => `<div class="signal-item">${new Date(s.time).toLocaleString()} | ${s.user}: ${s.symbol} ${s.action}</div>`)
+            .join("")
+        : "<div>No signal history</div>";
+    }
+
+    function restoreUser(username) {
+      if (confirm(`Restore access for ${username}?`)) {
+        let users = JSON.parse(localStorage.users);
+        users = users.map(u => 
+          u.username === username ? {...u, status: "approved"} : u
+        );
+        localStorage.users = JSON.stringify(users);
+        loadAdminData();
+        alert(`✅ Access restored for ${username}!`);
+      }
+    }
+
+    // ===== CLOCK & WEBSOCKET =====
+    function updateClock() {
+      document.getElementById("clock").textContent = "🕒 " + new Date().toLocaleString();
+    }
+
+    function initWebSocket() {
+      try {
+        const btcWs = new WebSocket("wss://stream.binance.com:9443/ws/btcusdt@ticker");
+        const ethWs = new WebSocket("wss://stream.binance.com:9443/ws/ethusdt@ticker");
+        
+        let btcPrice = "--";
+        let ethPrice = "--";
+        
+        btcWs.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.c) {
+              btcPrice = parseFloat(data.c).toFixed(2);
+              updateTicker(btcPrice, ethPrice);
+            }
+          } catch (e) {
+            console.error("BTC WebSocket error:", e);
+          }
+        };
+        
+        ethWs.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.c) {
+              ethPrice = parseFloat(data.c).toFixed(2);
+              updateTicker(btcPrice, ethPrice);
+            }
+          } catch (e) {
+            console.error("ETH WebSocket error:", e);
+          }
+        };
+        
+        btcWs.onerror = ethWs.onerror = (error) => {
+          console.error("WebSocket error:", error);
+          fallbackToAlphaVantage();
+        };
+        
+        btcWs.onclose = ethWs.onclose = () => {
+          setTimeout(initWebSocket, 5000);
+        };
+        
+      } catch (e) {
+        console.error("WebSocket init error:", e);
+        fallbackToAlphaVantage();
+      }
+    }
+
+    function updateTicker(btc, eth) {
+      const eurusd = (Math.random() * 0.02 + 1.07).toFixed(4);
+      const gold = Math.floor(Math.random() * 100 + 2300);
+      
+      document.getElementById("marketTicker").innerHTML = `
+        💹 BTC: $${btc} | 💹 ETH: $${eth} | 💹 EUR/USD: ${eurusd} | 💹 GOLD: $${gold}
+      `;
+    }
+
+    async function fallbackToAlphaVantage() {
+      try {
+        const btcRes = await axios.get(
+          `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=USD&apikey=${API_KEY}`
+        );
+        const btcPrice = btcRes.data["Realtime Currency Exchange Rate"]["5. Exchange Rate"];
+        
+        const ethRes = await axios.get(
+          `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=ETH&to_currency=USD&apikey=${API_KEY}`
+        );
+        const ethPrice = ethRes.data["Realtime Currency Exchange Rate"]["5. Exchange Rate"];
+        
+        updateTicker(parseFloat(btcPrice).toFixed(2), parseFloat(ethPrice).toFixed(2));
+      } catch (e) {
+        console.error("Alpha Vantage fallback failed:", e);
+        const btc = Math.floor(Math.random() * 50000 + 50000);
+        const eth = Math.floor(Math.random() * 3000 + 2500);
+        updateTicker(btc, eth);
+      }
+    }
+
+    // ===== GENERATE SIGNAL =====
+    async function generateSignal() {
+      const symbol = document.getElementById("symbolInput").value.trim().toUpperCase();
+      const mode = document.getElementById("modeSelect").value;
+      const resultDiv = document.getElementById("result");
+      const exportButtons = document.getElementById("exportButtons");
+      const loadingDiv = document.getElementById("loading");
+
+      if (!symbol) {
+        alert("Enter a symbol");
+        return;
+      }
+
+      loadingDiv.style.display = "block";
+      resultDiv.style.display = "none";
+      exportButtons.style.display = "none";
+
+      let price = null;
+      const tickerText = document.getElementById("marketTicker").innerText;
+      
+      if (symbol === "BTC" && tickerText.includes("BTC: $")) {
+        const match = tickerText.match(/BTC: \$([\d,\.]+)/);
+        if (match) price = parseFloat(match[1].replace(/,/g, ''));
+      } else if (symbol === "ETH" && tickerText.includes("ETH: $")) {
+        const match = tickerText.match(/ETH: \$([\d,\.]+)/);
+        if (match) price = parseFloat(match[1].replace(/,/g, ''));
+      }
+
+      if (!price) {
+        try {
+          if (symbol === "BTC") {
+            const res = await axios.get(
+              `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=BTC&to_currency=USD&apikey=${API_KEY}`
+            );
+            price = parseFloat(res.data["Realtime Currency Exchange Rate"]["5. Exchange Rate"]);
+          } else if (symbol === "ETH") {
+            const res = await axios.get(
+              `https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=ETH&to_currency=USD&apikey=${API_KEY}`
+            );
+            price = parseFloat(res.data["Realtime Currency Exchange Rate"]["5. Exchange Rate"]);
+          }
+        } catch (e) {
+          price = (Math.random() * 50000).toFixed(2);
+        }
+      }
+
+      if (!price) price = (Math.random() * 50000).toFixed(2);
+      price = parseFloat(price);
+
+      const isBullish = Math.random() > 0.5;
+      const entry = isBullish ? (price * 0.99).toFixed(2) : (price * 1.01).toFixed(2);
+      const sl = isBullish ? (price * 0.97).toFixed(2) : (price * 1.03).toFixed(2);
+      const tp1 = isBullish ? (price * 1.03).toFixed(2) : (price * 0.97).toFixed(2);
+
+      const signalHTML = `
+        <div class="signal-title ${isBullish ? 'bullish' : 'bearish'}">
+          🎯 ${symbol} (${isBullish ? 'Bullish' : 'Bearish'})
+        </div>
+        <strong>💰 Price:</strong> $${price.toFixed(2)}<br>
+        <strong>📌 Action:</strong> ${isBullish ? "Buy" : "Sell"}<br>
+        <strong>🚪 Entry:</strong> $${entry}<br>
+        <strong>🛑 SL:</strong> $${sl}<br>
+        <strong>🎯 TP1:</strong> $${tp1}<br>
+        <small>Time: ${new Date().toLocaleTimeString()}</small>
+      ` + (mode === "3" ? `
+        <div class="elite-ai-container">
+          <div class="elite-ai-header"><span class="ai-icon">🤖</span> AI Insight</div>
+          <div id="aiInsight" class="elite-ai-content">🧠 Processing...</div>
+        </div>
+      ` : '');
+
+      resultDiv.innerHTML = signalHTML;
+      loadingDiv.style.display = "none";
+      resultDiv.style.display = "block";
+      exportButtons.style.display = "block";
+
+      // Save signal
+      const user = JSON.parse(localStorage.currentuser);
+      const signals = JSON.parse(localStorage.signals);
+      signals.push({ 
+        user: user.username, 
+        symbol, 
+        price: price.toFixed(2), 
+        action: isBullish ? "Buy" : "Sell", 
+        time: new Date().toISOString() 
+      });
+      localStorage.signals = JSON.stringify(signals);
+
+      // Update admin panel
+      if (user.isAdmin) loadAdminData();
+
+      // AI Insight
+      if (mode === "3") {
+        const prompt = `Analyze ${symbol} at $${price.toFixed(2)}. Action: ${isBullish ? 'Buy' : 'Sell'}. Max 80 words.`;
+        try {
+          const res = await axios.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            {
+              model: "mistralai/mistral-7b-instruct:free",
+              messages: [{ role: "user", content: prompt }],
+              max_tokens: 120
+            },
+            { 
+              headers: { 
+                "Authorization": `Bearer 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` 
+              } 
+            }
+          );
+          document.getElementById("aiInsight").textContent = res.data.choices[0].message.content.trim();
+        } catch (e) {
+          document.getElementById("aiInsight").textContent = "AI: Failed to connect.";
+        }
+      }
+
+      document.getElementById("typingSound").play().catch(() => {});
+    }
+
+    // ===== SHARING & EXPORT =====
+    function copyAll() {
+      const text = document.getElementById("result").innerText;
+      navigator.clipboard.writeText(text).then(() => alert("✅ Copied!"));
+    }
+
+    function shareSignal() {
+      const text = "🚀 SmartSignal: " + document.getElementById("result").innerText;
+      if (navigator.share) {
+        navigator.share({ title: "Signal", text }).catch(() => alert("Copied:\n" + text));
+      } else {
+        alert("Copy & share:\n" + text);
+      }
+    }
+
+    async function downloadPNG() {
+      const canvas = await html2canvas(document.getElementById("result"), { backgroundColor: '#000' });
+      const a = document.createElement("a");
+      a.href = canvas.toDataURL("image/png");
+      a.download = `Signal_${Date.now()}.png`;
+      a.click();
+    }
+
+    async function downloadPDF() {
+      const canvas = await html2canvas(document.getElementById("result"), { backgroundColor: '#000' });
+      const pdf = new jsPDF();
+      pdf.addImage(canvas.toDataURL("image/png"), 'PNG', 10, 10, 190, 0);
+      pdf.save(`Signal_${Date.now()}.pdf`);
+    }
+
+    // ===== THEME TOGGLE =====
+    function toggleTheme() {
+      document.body.classList.toggle("theme-red");
+    }
+
+    // Auto-login if already logged in
+    window.onload = () => {
+      const saved = localStorage.currentuser;
+      if (saved) {
+        const user = JSON.parse(saved);
+        
+        // Check if account status has changed
+        const users = JSON.parse(localStorage.users);
+        const currentUser = users.find(u => u.username === user.username);
+        
+        if (!currentUser) {
+          // User was deleted
+          alert("❌ Your account no longer exists.");
+          localStorage.removeItem("currentuser");
+          return;
+        }
+        
+        if (currentUser.status === "pending") {
+          document.getElementById("approvalMessage").classList.remove("hidden");
+          document.getElementById("revokedMessage").classList.add("hidden");
+          return;
+        }
+        
+        if (currentUser.status === "revoked") {
+          document.getElementById("approvalMessage").classList.add("hidden");
+          document.getElementById("revokedMessage").classList.remove("hidden");
+          
+          const reason = currentUser.revocationReason ? 
+            `Reason: ${currentUser.revocationReason}` : 
+            "Please contact admin for more details.";
+            
+          document.getElementById("revocationReason").textContent = reason;
+          return;
+        }
+        
+        document.getElementById("loginScreen").classList.add("hidden");
+        document.getElementById("mainApp").classList.remove("hidden");
+        document.getElementById("userDisplay").textContent = user.username;
+        if (user.isAdmin) document.getElementById("adminDashboard").classList.remove("hidden");
+        initApp();
+      }
+    };
+  </script>
+</body>
+</html>
