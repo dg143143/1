@@ -26,5 +26,12 @@
     "isAdmin": false,
     "status": "approved",
     "joined": "2025-08-17T19:26:43.469Z"
+  },
+  {
+    "username": "B",
+    "password": "B",
+    "isAdmin": false,
+    "status": "pending",
+    "joined": "2025-08-17T19:39:44.880Z"
   }
 ]
