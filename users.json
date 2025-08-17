@@ -5,5 +5,12 @@
     "isAdmin": false,
     "status": "approved",
     "joined": "2025-08-17T18:59:17.617Z"
+  },
+  {
+    "username": "RAX",
+    "password": "RAX",
+    "isAdmin": false,
+    "status": "pending",
+    "joined": "2025-08-17T19:21:37.133Z"
   }
 ]
