@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -423,8 +422,8 @@
     @keyframes shine {
       100% { left: 100%; }
     }
-    .widget-body { 
-      padding: 20px; 
+    .widget-body {
+      padding: 20px;
     }
     input, select, button {
       padding: 10px;
@@ -454,7 +453,7 @@
       position: relative;
       overflow: hidden;
     }
-    button:hover { 
+    button:hover {
       background: var(--button-hover);
       transform: translateY(-2px);
       box-shadow: var(--neon-glow);
@@ -650,9 +649,18 @@
   <!-- Login Screen -->
   <div id="loginScreen" class="auth-container">
     <h2>🔐 Admin Login</h2>
-    <input type="text" id="username" placeholder="Username" />
-    <input type="password" id="password" placeholder="Password" />
-    <button onclick="handleLogin()">Login</button>
+
+    <div id="githubConfig" style="margin-bottom: 20px; border: 1px dashed var(--border); padding: 15px; border-radius: 8px;">
+      <h4 style="margin-top: 0; color: var(--pulse-color);">GitHub Storage Configuration</h4>
+      <input type="text" id="githubRepo" placeholder="GitHub Repo (e.g., owner/repo)" />
+      <input type="text" id="githubFile" placeholder="File Path (e.g., data/users.json)" />
+      <input type="password" id="githubPat" placeholder="GitHub Personal Access Token" />
+      <button id="connectBtn" onclick="connectToGitHub()">Connect to GitHub</button>
+    </div>
+
+    <input type="text" id="username" placeholder="Username" disabled/>
+    <input type="password" id="password" placeholder="Password" disabled/>
+    <button onclick="handleLogin()" disabled>Login</button>
     <div id="approvalMessage" class="approval-required hidden">
       ⚠️ Your account is pending admin approval.<br>
       Please wait for admin to activate your account.
@@ -750,35 +758,83 @@
   </div>
 
   <script>
-    // Initialize storage
-    if (!localStorage.users) {
-      // Default admin
-      localStorage.users = JSON.stringify([
-        { 
-          username: "DG143", 
-          password: "DG143", 
-          isAdmin: true, 
-          status: "approved",
-          joined: new Date().toISOString()
-        }
-      ]);
+    // ===== GitHub Storage Globals & Functions =====
+    let ghRepo, ghFile, ghPat, fileSha;
+    let users = [];
+
+    async function connectToGitHub() {
+      ghRepo = document.getElementById('githubRepo').value.trim();
+      ghFile = document.getElementById('githubFile').value.trim();
+      ghPat = document.getElementById('githubPat').value.trim();
+
+      if (!ghRepo || !ghFile || !ghPat) {
+        alert('Please fill in all GitHub configuration fields.');
+        return;
+      }
+      const connectBtn = document.getElementById('connectBtn');
+      connectBtn.textContent = 'Connecting...';
+      connectBtn.disabled = true;
+      try {
+        const data = await readFromGitHub();
+        users = data.users;
+        fileSha = data.sha;
+        document.getElementById('username').disabled = false;
+        document.getElementById('password').disabled = false;
+        document.querySelector('button[onclick="handleLogin()"]').disabled = false;
+        document.getElementById('githubRepo').disabled = true;
+        document.getElementById('githubFile').disabled = true;
+        document.getElementById('githubPat').disabled = true;
+        connectBtn.textContent = 'Connected!';
+        alert(`Successfully loaded ${users.length} users from GitHub.`);
+      } catch (error) {
+        console.error('GitHub connection failed:', error);
+        alert('Failed to connect to GitHub. Check repo, file path, and PAT. The file must exist and be a valid JSON array.');
+        connectBtn.textContent = 'Connect to GitHub';
+        connectBtn.disabled = false;
+      }
+    }
+
+    async function readFromGitHub() {
+      const url = `https://api.github.com/repos/${ghRepo}/contents/${ghFile}`;
+      const headers = { 'Authorization': `token ${ghPat}`, 'Accept': 'application/vnd.github.v3+json' };
+      const response = await axios.get(url, { headers });
+      const content = atob(response.data.content);
+      return { users: JSON.parse(content), sha: response.data.sha };
+    }
+
+    async function writeToGitHub(updatedUsers, commitMessage) {
+      const url = `https://api.github.com/repos/${ghRepo}/contents/${ghFile}`;
+      const headers = { 'Authorization': `token ${ghPat}`, 'Accept': 'application/vnd.github.v3+json' };
+      const content = btoa(JSON.stringify(updatedUsers, null, 2));
+      const data = { message: commitMessage, content, sha: fileSha };
+      try {
+        const response = await axios.put(url, data, { headers });
+        fileSha = response.data.content.sha;
+        users = updatedUsers;
+        console.log('Successfully wrote to GitHub. New SHA:', fileSha);
+      } catch (error) {
+        console.error('Failed to write to GitHub:', error);
+        alert('Error saving data to GitHub. Your local changes might be lost on refresh. Please check console for details.');
+        throw error;
+      }
     }
 
     // ===== LOGIN HANDLER =====
-    function handleLogin() {
+    async function handleLogin() {
       const username = document.getElementById("username").value.trim();
       const password = document.getElementById("password").value;
       if (!username) {
         alert("Please enter a username");
         return;
       }
-      let users = JSON.parse(localStorage.users);
       let user = users.find(u => u.username === username);
-      // Admin Login
+
+      // Admin Login (remains local, doesn't need to be in GitHub)
       if (username === "DG143" && password === "DG143") {
         loginUser("DG143", true);
         return;
       }
+
       // Regular user login
       if (user) {
         // Check status
@@ -790,8 +846,8 @@
         if (user.status === "revoked") {
           document.getElementById("approvalMessage").classList.add("hidden");
           document.getElementById("revokedMessage").classList.remove("hidden");
-          const reason = user.revocationReason ? 
-            `Reason: ${user.revocationReason}` : 
+          const reason = user.revocationReason ?
+            `Reason: ${user.revocationReason}` :
             "Please contact admin for more details.";
           document.getElementById("revocationReason").textContent = reason;
           return;
@@ -804,19 +860,24 @@
         loginUser(username, user.isAdmin);
         return;
       }
+
       // New user - create pending account
-      user = { 
-        username, 
+      const newUser = {
+        username,
         password,
         isAdmin: false,
         status: "pending",
         joined: new Date().toISOString()
       };
-      users.push(user);
-      localStorage.users = JSON.stringify(users);
-      document.getElementById("approvalMessage").classList.remove("hidden");
-      document.getElementById("revokedMessage").classList.add("hidden");
-      alert("✅ Account created! Awaiting admin approval...");
+      const updatedUsers = [...users, newUser];
+      try {
+        await writeToGitHub(updatedUsers, `Create pending user: ${username}`);
+        document.getElementById("approvalMessage").classList.remove("hidden");
+        document.getElementById("revokedMessage").classList.add("hidden");
+        alert("✅ Account created! Awaiting admin approval...");
+      } catch (error) {
+        alert('Failed to create account on GitHub.');
+      }
     }
 
     function loginUser(username, isAdmin) {
@@ -838,22 +899,28 @@
     }
 
     // ===== ADMIN FUNCTIONS =====
-    function approveUser(username) {
-      let users = JSON.parse(localStorage.users);
-      users = users.map(u => 
-        u.username === username ? {...u, status: "approved"} : u
+    async function approveUser(username) {
+      const updatedUsers = users.map(u =>
+        u.username === username ? { ...u, status: "approved" } : u
       );
-      localStorage.users = JSON.stringify(users);
-      loadAdminData();
-      alert(`✅ ${username} has been approved!`);
+      try {
+        await writeToGitHub(updatedUsers, `Approve user: ${username}`);
+        loadAdminData();
+        alert(`✅ ${username} has been approved!`);
+      } catch (error) {
+        alert(`Failed to approve ${username}. Please try again.`);
+      }
     }
 
-    function rejectUser(username) {
-      let users = JSON.parse(localStorage.users);
-      users = users.filter(u => u.username !== username);
-      localStorage.users = JSON.stringify(users);
-      loadAdminData();
-      alert(`❌ ${username} has been rejected and removed.`);
+    async function rejectUser(username) {
+      const updatedUsers = users.filter(u => u.username !== username);
+      try {
+        await writeToGitHub(updatedUsers, `Reject and remove user: ${username}`);
+        loadAdminData();
+        alert(`❌ ${username} has been rejected and removed.`);
+      } catch (error) {
+        alert(`Failed to reject ${username}. Please try again.`);
+      }
     }
 
     function showRevokeModal(username) {
@@ -866,51 +933,56 @@
       document.getElementById("revokeModal").classList.add("hidden");
     }
 
-    function confirmRevoke() {
+    async function confirmRevoke() {
       const username = document.getElementById("revokeUsername").textContent;
       const reason = document.getElementById("revokeReason").value.trim();
       if (!reason) {
         alert("Please enter a reason for revocation");
         return;
       }
-      revokeUser(username, reason);
+      await revokeUser(username, reason);
       closeRevokeModal();
     }
 
-    function revokeUser(username, reason) {
+    async function revokeUser(username, reason) {
       if (username === "DG143") {
         alert("❌ Cannot revoke admin account!");
         return;
       }
-      let users = JSON.parse(localStorage.users);
-      users = users.map(u => 
+      const updatedUsers = users.map(u =>
         u.username === username ? {
-          ...u, 
+          ...u,
           status: "revoked",
           revocationReason: reason,
           revokedAt: new Date().toISOString()
         } : u
       );
-      localStorage.users = JSON.stringify(users);
-      loadAdminData();
-      alert(`❌ Access revoked for ${username}!`);
+      try {
+        await writeToGitHub(updatedUsers, `Revoke access for user: ${username}`);
+        loadAdminData();
+        alert(`❌ Access revoked for ${username}!`);
+      } catch (error) {
+        alert(`Failed to revoke ${username}. Please try again.`);
+      }
     }
 
-    function restoreUser(username) {
+    async function restoreUser(username) {
       if (confirm(`Restore access for ${username}?`)) {
-        let users = JSON.parse(localStorage.users);
-        users = users.map(u => 
-          u.username === username ? {...u, status: "approved"} : u
+        const updatedUsers = users.map(u =>
+          u.username === username ? { ...u, status: "approved" } : u
         );
-        localStorage.users = JSON.stringify(users);
-        loadAdminData();
-        alert(`✅ Access restored for ${username}!`);
+        try {
+          await writeToGitHub(updatedUsers, `Restore access for user: ${username}`);
+          loadAdminData();
+          alert(`✅ Access restored for ${username}!`);
+        } catch (error) {
+          alert(`Failed to restore ${username}. Please try again.`);
+        }
       }
     }
 
     function loadAdminData() {
-      const users = JSON.parse(localStorage.users);
-      // Update statistics
+      // This function now uses the global `users` array, which is loaded from GitHub.
       const totalUsers = users.length;
       const pendingUsers = users.filter(u => u.status === "pending");
       const approvedUsers = users.filter(u => u.status === "approved");
@@ -920,7 +992,7 @@
       document.getElementById("approvedCount").textContent = approvedUsers.length;
       document.getElementById("revokedCount").textContent = revokedUsers.length;
       // Pending users
-      document.getElementById("pendingList").innerHTML = pendingUsers.length > 0 
+      document.getElementById("pendingList").innerHTML = pendingUsers.length > 0
         ? pendingUsers.map(u => `
           <div class="user-item">
             <div class="user-info">
@@ -981,43 +1053,8 @@
       document.body.classList.toggle("theme-red");
     }
 
-    // Auto-login if already logged in
-    window.onload = () => {
-      const saved = localStorage.currentuser;
-      if (saved) {
-        const user = JSON.parse(saved);
-        // Check if account status has changed
-        const users = JSON.parse(localStorage.users);
-        const currentUser = users.find(u => u.username === user.username);
-        if (!currentUser) {
-          // User was deleted
-          alert("❌ Your account no longer exists.");
-          localStorage.removeItem("currentuser");
-          return;
-        }
-        if (currentUser.status === "pending") {
-          document.getElementById("approvalMessage").classList.remove("hidden");
-          document.getElementById("revokedMessage").classList.add("hidden");
-          return;
-        }
-        if (currentUser.status === "revoked") {
-          document.getElementById("approvalMessage").classList.add("hidden");
-          document.getElementById("revokedMessage").classList.remove("hidden");
-          const reason = currentUser.revocationReason ? 
-            `Reason: ${currentUser.revocationReason}` : 
-            "Please contact admin for more details.";
-          document.getElementById("revocationReason").textContent = reason;
-          return;
-        }
-        document.getElementById("loginScreen").classList.add("hidden");
-        document.getElementById("mainApp").classList.remove("hidden");
-        document.getElementById("userDisplay").textContent = user.username;
-        if (user.isAdmin) {
-          document.getElementById("adminDashboard").classList.remove("hidden");
-          loadAdminData();
-        }
-      }
-    };
+    // Auto-login on page load is disabled for GitHub storage mode.
+    window.onload = () => {};
 
     // SmartSignal Pro Code
     const OPENROUTER_API_KEY = "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";
@@ -1130,22 +1167,22 @@
       const atr = atrSum / atrPeriod;
       const superTrend = price * (price > pivot ? 0.98 : 1.02);
       const isBullish = price > superTrend;
-      const demandZone = isBullish 
-        ? [(price * 0.98).toFixed(2), (price * 0.988).toFixed(2)] 
+      const demandZone = isBullish
+        ? [(price * 0.98).toFixed(2), (price * 0.988).toFixed(2)]
         : [(price * 1.01).toFixed(2), (price * 1.018).toFixed(2)];
-      const supplyZone = isBullish 
-        ? [(price * 1.015).toFixed(2), (price * 1.025).toFixed(2)] 
+      const supplyZone = isBullish
+        ? [(price * 1.015).toFixed(2), (price * 1.025).toFixed(2)]
         : [(price * 0.97).toFixed(2), (price * 0.98).toFixed(2)];
-      const fvgZone = isBullish 
-        ? [(price * 0.975).toFixed(2), (price * 0.98).toFixed(2)] 
+      const fvgZone = isBullish
+        ? [(price * 0.975).toFixed(2), (price * 0.98).toFixed(2)]
         : [(price * 1.02).toFixed(2), (price * 1.025).toFixed(2)];
       const patterns = ["Horse Shoe", "Protected Bullish Engulfing", "MeReT", "4-Candle Reversal"];
       const detectedPattern = patterns[Math.floor(Math.random() * patterns.length)];
       const vah = (price * 1.03).toFixed(2);
       const val = (price * 0.97).toFixed(2);
       const poc = price.toFixed(2);
-      const liquidityPool = isBullish 
-        ? (price * 0.96).toFixed(2) 
+      const liquidityPool = isBullish
+        ? (price * 0.96).toFixed(2)
         : (price * 1.04).toFixed(2);
       const timeframes = ['5M', '15M', '30M', '1H', '4H', '1D'];
       const mtfa = timeframes.map(tf => {
@@ -1269,5 +1306,38 @@ Volume: ${volumeImbalance}
             }
           );
           const aiText = response.data.choices[0].message.content.trim();
-          document.getElementById("aiInsight").textContent = ai
-```
+          document.getElementById("aiInsight").textContent = aiText;
+        } catch (err) {
+          console.error("AI API Error:", err);
+          document.getElementById("aiInsight").textContent = "Error fetching AI insight.";
+        }
+      }
+    }
+
+    function copyAIInsight() {
+      const insightText = document.getElementById('aiInsight').textContent;
+      navigator.clipboard.writeText(insightText).then(() => {
+        alert('AI Insight copied to clipboard!');
+      }, (err) => {
+        console.error('Could not copy text: ', err);
+        alert('Failed to copy insight.');
+      });
+    }
+
+    function downloadPNG() {
+      const signalCard = document.getElementById('result');
+      signalCard.style.backgroundColor = document.body.classList.contains('dark-mode') ? '#0f1525' : '#eef7ff';
+      html2canvas(signalCard, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: document.body.classList.contains('dark-mode') ? '#0a0a12' : '#f9f9f9'
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `SmartSignal_${document.getElementById('symbolInput').value.toUpperCase()}_${new Date().toISOString()}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
