@@ -1047,9 +1047,16 @@
     }
 
     window.onload = async () => {
-        const success = await getUsers();
+        const { success } = await getUsers();
         if (!success) {
-            document.body.innerHTML = '<div style="color: red; text-align: center; margin-top: 50px;"><h1>Connection to Backend Failed</h1><p>Please ensure the backend server is running and accessible.</p></div>';
+            document.body.innerHTML = '<div style="color: red; text-align: center; margin-top: 50px;"><h1>Connection to Backend Failed</h1><p>Please ensure the backend server is running and accessible at ' + API_URL + '.</p></div>';
+        } else {
+            // Check for a logged in user from a previous session
+            const saved = localStorage.getItem("currentuser");
+            if(saved) {
+                const user = JSON.parse(saved);
+                loginUser(user.username, user.isAdmin);
+            }
         }
     };
 
