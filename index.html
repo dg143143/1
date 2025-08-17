@@ -647,17 +647,15 @@
 <body>
   <!-- Login Screen -->
   <div id="loginScreen" class="auth-container">
-    <h2>🔐 Admin Login</h2>
+    <h2>🔐 Login</h2>
     <input type="text" id="username" placeholder="Username" />
     <input type="password" id="password" placeholder="Password" />
     <button onclick="handleLogin()">Login</button>
     <div id="approvalMessage" class="approval-required hidden">
-      ⚠️ Your account is pending admin approval.<br>
-      Please wait for admin to activate your account.
+      ⚠️ Your account is not yet approved.
     </div>
     <div id="revokedMessage" class="approval-required hidden">
-      ⚠️ Your account access has been revoked by admin.<br>
-      <span id="revocationReason"></span>
+      ⚠️ Your account access has been revoked.
     </div>
   </div>
   <!-- Main App (Hidden Initially) -->
@@ -673,74 +671,64 @@
     <!-- Admin Dashboard -->
     <div id="adminDashboard" class="admin-dashboard">
       <h3>🚨 ADMIN DASHBOARD</h3>
-
-      <div class="admin-section" id="githubConnectSection">
-        <h4>🔌 Connect to GitHub Storage</h4>
-        <p>Enter your Personal Access Token to manage users.</p>
-        <input type="password" id="githubPat" placeholder="GitHub Personal Access Token" />
-        <button id="connectBtn" onclick="connectToGitHub()">Connect</button>
+      <!-- Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number" id="totalUsers">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pendingCount">0</div>
+          <div class="stat-label">Pending Approval</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="approvedCount">0</div>
+          <div class="stat-label">Approved Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="revokedCount">0</div>
+          <div class="stat-label">Revoked Users</div>
+        </div>
       </div>
 
-      <div id="userManagementSections" class="hidden">
-        <!-- Statistics -->
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number" id="totalUsers">0</div>
-            <div class="stat-label">Total Users</div>
+      <!-- Create New User Section -->
+      <div class="admin-section">
+        <h4>➕ Create New User</h4>
+        <div style="padding: 15px; background: rgba(0, 255, 0, 0.1); border-radius: 8px;">
+          <p>Create a new user account directly:</p>
+          <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
+          <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
+          <div style="margin: 15px 0;">
+            <label style="display: inline-block; width: 100px;">Status:</label>
+            <select id="userStatus" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
+              <option value="pending">Pending Approval</option>
+              <option value="approved">Approved</option>
+            </select>
           </div>
-          <div class="stat-card">
-            <div class="stat-number" id="pendingCount">0</div>
-            <div class="stat-label">Pending Approval</div>
+          <div style="margin: 15px 0;">
+            <label style="display: inline-block; width: 100px;">Role:</label>
+            <select id="userRole" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
+              <option value="user">Regular User</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
-          <div class="stat-card">
-            <div class="stat-number" id="approvedCount">0</div>
-            <div class="stat-label">Approved Users</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number" id="revokedCount">0</div>
-            <div class="stat-label">Revoked Users</div>
-          </div>
+          <button onclick="createUser()" style="background: var(--btn-bg); color: var(--text); border: 2px solid var(--border); padding: 12px 20px; cursor: pointer; font-weight: bold; width: 100%; font-family: var(--font); border-radius: 6px;">
+            Create User
+          </button>
         </div>
+      </div>
 
-        <!-- Create New User Section -->
-        <div class="admin-section">
-          <h4>➕ Create New User</h4>
-          <div style="padding: 15px; background: rgba(0, 255, 0, 0.1); border-radius: 8px;">
-            <p>Create a new user account directly:</p>
-            <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
-            <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
-            <div style="margin: 15px 0;">
-              <label style="display: inline-block; width: 100px;">Status:</label>
-              <select id="userStatus" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
-                <option value="pending">Pending Approval</option>
-                <option value="approved">Approved</option>
-              </select>
-            </div>
-            <div style="margin: 15px 0;">
-              <label style="display: inline-block; width: 100px;">Role:</label>
-              <select id="userRole" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
-                <option value="user">Regular User</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <button onclick="createUser()" style="background: var(--btn-bg); color: var(--text); border: 2px solid var(--border); padding: 12px 20px; cursor: pointer; font-weight: bold; width: 100%; font-family: var(--font); border-radius: 6px;">
-              Create User
-            </button>
-          </div>
-        </div>
-
-        <div class="admin-section">
-          <h4>👥 Pending Approvals</h4>
-          <div class="user-list" id="pendingList"></div>
-        </div>
-        <div class="admin-section">
-          <h4>✅ Approved Users</h4>
-          <div class="user-list" id="approvedList"></div>
-        </div>
-        <div class="admin-section">
-          <h4>❌ Revoked Users</h4>
-          <div class="user-list" id="revokedList"></div>
-        </div>
+      <div class="admin-section">
+        <h4>👥 Pending Approvals</h4>
+        <div class="user-list" id="pendingList"></div>
+      </div>
+      <div class="admin-section">
+        <h4>✅ Approved Users</h4>
+        <div class="user-list" id="approvedList"></div>
+      </div>
+      <div class="admin-section">
+        <h4>❌ Revoked Users</h4>
+        <div class="user-list" id="revokedList"></div>
       </div>
     </div>
     <!-- SmartSignal Widget -->
@@ -781,65 +769,40 @@
     </div>
   </div>
   <script>
-    // ===== GitHub Storage Globals & Functions =====
-    let ghRepo, ghFile, ghPat, fileSha;
+    // ===== Globals =====
     let users = [];
-    let githubConnected = false;
+    let fileSha = '';
+    const API_URL = 'http://localhost:3000/api'; // The URL of our new backend server
 
-    async function connectToGitHub() {
-      ghRepo = 'dg143143/1';
-      ghFile = 'users.json';
-      ghPat = document.getElementById('githubPat').value.trim();
-
-      if (!ghPat) {
-        alert('Please enter your GitHub Personal Access Token.');
-        return;
-      }
-      const connectBtn = document.getElementById('connectBtn');
-      connectBtn.textContent = 'Connecting...';
-      connectBtn.disabled = true;
-      try {
-        const data = await readFromGitHub();
-        users = data.users;
-        fileSha = data.sha;
-        githubConnected = true;
-
-        document.getElementById('githubConnectSection').classList.add('hidden');
-        document.getElementById('userManagementSections').classList.remove('hidden');
-
-        alert(`Successfully connected to GitHub and loaded ${users.length} users.`);
-        loadAdminData(); // Initial load of data into the tables
-      } catch (error) {
-        console.error('GitHub connection failed:', error);
-        alert('Failed to connect to GitHub. Check your PAT and ensure the file `users.json` exists in the root of the `dg143143/1` repository with `[]` as its content.');
-        connectBtn.textContent = 'Connect';
-        connectBtn.disabled = false;
-      }
+    // ===== API Functions =====
+    async function getUsers() {
+        try {
+            const response = await axios.get(`${API_URL}/users`);
+            users = response.data.users;
+            fileSha = response.data.sha;
+            return { success: true };
+        } catch (error) {
+            console.error("Failed to get users:", error);
+            alert("Could not connect to the backend server. Make sure it is running.");
+            return { success: false };
+        }
     }
 
-    async function readFromGitHub() {
-      const url = `https://api.github.com/repos/${ghRepo}/contents/${ghFile}`;
-      const headers = { 'Authorization': `token ${ghPat}`, 'Accept': 'application/vnd.github.v3+json' };
-      const response = await axios.get(url, { headers });
-      const content = atob(response.data.content);
-      return { users: JSON.parse(content), sha: response.data.sha };
-    }
-
-    async function writeToGitHub(updatedUsers, commitMessage) {
-      const url = `https://api.github.com/repos/${ghRepo}/contents/${ghFile}`;
-      const headers = { 'Authorization': `token ${ghPat}`, 'Accept': 'application/vnd.github.v3+json' };
-      const content = btoa(JSON.stringify(updatedUsers, null, 2));
-      const data = { message: commitMessage, content, sha: fileSha };
-      try {
-        const response = await axios.put(url, data, { headers });
-        fileSha = response.data.content.sha;
-        users = updatedUsers;
-        console.log('Successfully wrote to GitHub. New SHA:', fileSha);
-      } catch (error) {
-        console.error('Failed to write to GitHub:', error);
-        alert('Error saving data to GitHub. Your local changes might be lost on refresh. Please check console for details.');
-        throw error;
-      }
+    async function updateUsers(updatedUsers, commitMessage) {
+        try {
+            const response = await axios.post(`${API_URL}/users`, {
+                users: updatedUsers,
+                sha: fileSha,
+                commitMessage: commitMessage
+            });
+            fileSha = response.data.sha; // Update the sha with the new one from the server
+            users = updatedUsers; // Keep the local state in sync
+            return { success: true };
+        } catch (error) {
+            console.error("Failed to update users:", error);
+            alert("Failed to save changes to GitHub via the backend server.");
+            return { success: false };
+        }
     }
 
     // ===== LOGIN HANDLER =====
@@ -848,17 +811,6 @@
       const password = document.getElementById("password").value;
       if (!username) {
         alert("Please enter a username");
-        return;
-      }
-
-      // Admin login does not require GitHub connection yet.
-      if (username === "DG143" && password === "DG143") {
-        loginUser("DG143", true);
-        return;
-      }
-
-      if (!githubConnected) {
-        alert("Please connect to GitHub in the admin panel before logging in as a regular user.");
         return;
       }
 
@@ -875,40 +827,35 @@
         }
         loginUser(username, user.isAdmin);
         return;
-      }
-
-      const newUser = {
-        username,
-        password,
-        isAdmin: false,
-        status: "pending",
-        joined: new Date().toISOString()
-      };
-      const updatedUsers = [...users, newUser];
-      try {
-        await writeToGitHub(updatedUsers, `User registration: ${username}`);
-        document.getElementById("approvalMessage").classList.remove("hidden");
-        document.getElementById("revokedMessage").classList.add("hidden");
-        alert("✅ Account created! Awaiting admin approval...");
-      } catch (error) {
-        alert('Failed to create account on GitHub.');
+      } else {
+        // If user does not exist, create a new pending account
+        const newUser = {
+          username,
+          password,
+          isAdmin: false,
+          status: "pending",
+          joined: new Date().toISOString()
+        };
+        const updatedUsers = [...users, newUser];
+        const result = await updateUsers(updatedUsers, `User registration: ${username}`);
+        if (result.success) {
+            document.getElementById("approvalMessage").classList.remove("hidden");
+            document.getElementById("revokedMessage").classList.add("hidden");
+            alert("✅ Account created! Awaiting admin approval...");
+        }
       }
     }
 
     function loginUser(username, isAdmin) {
-      localStorage.currentuser = JSON.stringify({ username, isAdmin });
+      localStorage.setItem("currentuser", JSON.stringify({ username, isAdmin }));
       document.getElementById("loginScreen").classList.add("hidden");
       document.getElementById("mainApp").classList.remove("hidden");
       document.getElementById("userDisplay").textContent = username;
       if (isAdmin) {
         document.getElementById("adminDashboard").classList.remove("hidden");
-        // User management is hidden by default until connected
-        document.getElementById('userManagementSections').classList.add('hidden');
-        document.getElementById('githubConnectSection').classList.remove('hidden');
+        loadAdminData();
       } else {
-        // Hide admin dashboard for non-admin users
         document.getElementById("adminDashboard").classList.add("hidden");
-        // Show only the SmartSignal widget for regular users
         document.querySelector('.smartsignal-widget').classList.remove('hidden');
       }
     }
@@ -923,23 +870,19 @@
       const updatedUsers = users.map(u =>
         u.username === username ? {...u, status: "approved"} : u
       );
-      try {
-        await writeToGitHub(updatedUsers, `Approve user: ${username}`);
+      const result = await updateUsers(updatedUsers, `Approve user: ${username}`);
+      if (result.success) {
         loadAdminData();
         alert(`✅ ${username} has been approved!`);
-      } catch (error) {
-        alert(`Failed to approve ${username}. Please try again.`);
       }
     }
 
     async function rejectUser(username) {
       const updatedUsers = users.filter(u => u.username !== username);
-      try {
-        await writeToGitHub(updatedUsers, `Reject user: ${username}`);
+      const result = await updateUsers(updatedUsers, `Reject user: ${username}`);
+      if(result.success) {
         loadAdminData();
         alert(`❌ ${username} has been rejected and removed.`);
-      } catch (error) {
-        alert(`Failed to reject ${username}. Please try again.`);
       }
     }
 
@@ -977,12 +920,10 @@
           revokedAt: new Date().toISOString()
         } : u
       );
-      try {
-        await writeToGitHub(updatedUsers, `Revoke access for: ${username}`);
+      const result = await updateUsers(updatedUsers, `Revoke access for: ${username}`);
+      if(result.success) {
         loadAdminData();
         alert(`❌ Access revoked for ${username}!`);
-      } catch (error) {
-        alert(`Failed to revoke ${username}. Please try again.`);
       }
     }
 
@@ -991,12 +932,10 @@
         const updatedUsers = users.map(u =>
           u.username === username ? {...u, status: "approved"} : u
         );
-        try {
-          await writeToGitHub(updatedUsers, `Restore access for: ${username}`);
+        const result = await updateUsers(updatedUsers, `Restore access for: ${username}`);
+        if(result.success) {
           loadAdminData();
           alert(`✅ Access restored for ${username}!`);
-        } catch (error) {
-          alert(`Failed to restore ${username}. Please try again.`);
         }
       }
     }
@@ -1027,14 +966,12 @@
       };
 
       const updatedUsers = [...users, newUser];
-      try {
-        await writeToGitHub(updatedUsers, `Admin created user: ${username}`);
+      const result = await updateUsers(updatedUsers, `Admin created user: ${username}`);
+      if (result.success) {
         document.getElementById("newUsername").value = "";
         document.getElementById("newPassword").value = "";
         loadAdminData();
         alert(`✅ User '${username}' has been created successfully!`);
-      } catch (error) {
-        alert(`Failed to create user ${username}. Please try again.`);
       }
     }
 
@@ -1109,7 +1046,12 @@
       document.body.classList.toggle("theme-red");
     }
 
-    window.onload = () => {};
+    window.onload = async () => {
+        const success = await getUsers();
+        if (!success) {
+            document.body.innerHTML = '<div style="color: red; text-align: center; margin-top: 50px;"><h1>Connection to Backend Failed</h1><p>Please ensure the backend server is running and accessible.</p></div>';
+        }
+    };
 
     // SmartSignal Pro Code
     const OPENROUTER_API_KEY = "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";
