@@ -648,14 +648,9 @@
   <!-- Login Screen -->
   <div id="loginScreen" class="auth-container">
     <h2>🔐 Admin Login</h2>
-    <div id="githubConfig" style="margin-bottom: 20px; border: 1px dashed var(--border); padding: 15px; border-radius: 8px;">
-      <h4 style="margin-top: 0; color: var(--pulse-color);">GitHub Storage Configuration</h4>
-      <input type="password" id="githubPat" placeholder="GitHub Personal Access Token" />
-      <button id="connectBtn" onclick="connectToGitHub()">Connect to GitHub</button>
-    </div>
-    <input type="text" id="username" placeholder="Username" disabled/>
-    <input type="password" id="password" placeholder="Password" disabled/>
-    <button onclick="handleLogin()" disabled>Login</button>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="handleLogin()">Login</button>
     <div id="approvalMessage" class="approval-required hidden">
       ⚠️ Your account is pending admin approval.<br>
       Please wait for admin to activate your account.
@@ -678,64 +673,74 @@
     <!-- Admin Dashboard -->
     <div id="adminDashboard" class="admin-dashboard">
       <h3>🚨 ADMIN DASHBOARD</h3>
-      <!-- Statistics -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-number" id="totalUsers">0</div>
-          <div class="stat-label">Total Users</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="pendingCount">0</div>
-          <div class="stat-label">Pending Approval</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="approvedCount">0</div>
-          <div class="stat-label">Approved Users</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-number" id="revokedCount">0</div>
-          <div class="stat-label">Revoked Users</div>
-        </div>
+
+      <div class="admin-section" id="githubConnectSection">
+        <h4>🔌 Connect to GitHub Storage</h4>
+        <p>Enter your Personal Access Token to manage users.</p>
+        <input type="password" id="githubPat" placeholder="GitHub Personal Access Token" />
+        <button id="connectBtn" onclick="connectToGitHub()">Connect</button>
       </div>
 
-      <!-- Create New User Section -->
-      <div class="admin-section">
-        <h4>➕ Create New User</h4>
-        <div style="padding: 15px; background: rgba(0, 255, 0, 0.1); border-radius: 8px;">
-          <p>Create a new user account directly (bypasses registration process):</p>
-          <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
-          <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
-          <div style="margin: 15px 0;">
-            <label style="display: inline-block; width: 100px;">Status:</label>
-            <select id="userStatus" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
-              <option value="pending">Pending Approval</option>
-              <option value="approved">Approved</option>
-            </select>
+      <div id="userManagementSections" class="hidden">
+        <!-- Statistics -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number" id="totalUsers">0</div>
+            <div class="stat-label">Total Users</div>
           </div>
-          <div style="margin: 15px 0;">
-            <label style="display: inline-block; width: 100px;">Role:</label>
-            <select id="userRole" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
-              <option value="user">Regular User</option>
-              <option value="admin">Admin</option>
-            </select>
+          <div class="stat-card">
+            <div class="stat-number" id="pendingCount">0</div>
+            <div class="stat-label">Pending Approval</div>
           </div>
-          <button onclick="createUser()" style="background: var(--btn-bg); color: var(--text); border: 2px solid var(--border); padding: 12px 20px; cursor: pointer; font-weight: bold; width: 100%; font-family: var(--font); border-radius: 6px;">
-            Create User
-          </button>
+          <div class="stat-card">
+            <div class="stat-number" id="approvedCount">0</div>
+            <div class="stat-label">Approved Users</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" id="revokedCount">0</div>
+            <div class="stat-label">Revoked Users</div>
+          </div>
         </div>
-      </div>
 
-      <div class="admin-section">
-        <h4>👥 Pending Approvals</h4>
-        <div class="user-list" id="pendingList"></div>
-      </div>
-      <div class="admin-section">
-        <h4>✅ Approved Users</h4>
-        <div class="user-list" id="approvedList"></div>
-      </div>
-      <div class="admin-section">
-        <h4>❌ Revoked Users</h4>
-        <div class="user-list" id="revokedList"></div>
+        <!-- Create New User Section -->
+        <div class="admin-section">
+          <h4>➕ Create New User</h4>
+          <div style="padding: 15px; background: rgba(0, 255, 0, 0.1); border-radius: 8px;">
+            <p>Create a new user account directly:</p>
+            <input type="text" id="newUsername" placeholder="Username" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
+            <input type="password" id="newPassword" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;" />
+            <div style="margin: 15px 0;">
+              <label style="display: inline-block; width: 100px;">Status:</label>
+              <select id="userStatus" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
+                <option value="pending">Pending Approval</option>
+                <option value="approved">Approved</option>
+              </select>
+            </div>
+            <div style="margin: 15px 0;">
+              <label style="display: inline-block; width: 100px;">Role:</label>
+              <select id="userRole" style="padding: 8px; background: rgba(0, 20, 0, 0.4); border: 1px solid var(--border); color: var(--text); border-radius: 6px;">
+                <option value="user">Regular User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <button onclick="createUser()" style="background: var(--btn-bg); color: var(--text); border: 2px solid var(--border); padding: 12px 20px; cursor: pointer; font-weight: bold; width: 100%; font-family: var(--font); border-radius: 6px;">
+              Create User
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-section">
+          <h4>👥 Pending Approvals</h4>
+          <div class="user-list" id="pendingList"></div>
+        </div>
+        <div class="admin-section">
+          <h4>✅ Approved Users</h4>
+          <div class="user-list" id="approvedList"></div>
+        </div>
+        <div class="admin-section">
+          <h4>❌ Revoked Users</h4>
+          <div class="user-list" id="revokedList"></div>
+        </div>
       </div>
     </div>
     <!-- SmartSignal Widget -->
@@ -779,6 +784,7 @@
     // ===== GitHub Storage Globals & Functions =====
     let ghRepo, ghFile, ghPat, fileSha;
     let users = [];
+    let githubConnected = false;
 
     async function connectToGitHub() {
       ghRepo = 'dg143143/1';
@@ -796,16 +802,17 @@
         const data = await readFromGitHub();
         users = data.users;
         fileSha = data.sha;
-        document.getElementById('username').disabled = false;
-        document.getElementById('password').disabled = false;
-        document.querySelector('button[onclick="handleLogin()"]').disabled = false;
-        document.getElementById('githubPat').disabled = true;
-        connectBtn.textContent = 'Connected!';
-        alert(`Successfully loaded ${users.length} users from GitHub.`);
+        githubConnected = true;
+
+        document.getElementById('githubConnectSection').classList.add('hidden');
+        document.getElementById('userManagementSections').classList.remove('hidden');
+
+        alert(`Successfully connected to GitHub and loaded ${users.length} users.`);
+        loadAdminData(); // Initial load of data into the tables
       } catch (error) {
         console.error('GitHub connection failed:', error);
         alert('Failed to connect to GitHub. Check your PAT and ensure the file `users.json` exists in the root of the `dg143143/1` repository with `[]` as its content.');
-        connectBtn.textContent = 'Connect to GitHub';
+        connectBtn.textContent = 'Connect';
         connectBtn.disabled = false;
       }
     }
@@ -843,30 +850,25 @@
         alert("Please enter a username");
         return;
       }
-      let user = users.find(u => u.username === username);
-      // Admin Login
+
+      // Admin login does not require GitHub connection yet.
       if (username === "DG143" && password === "DG143") {
         loginUser("DG143", true);
         return;
       }
-      // Regular user login
+
+      if (!githubConnected) {
+        alert("Please connect to GitHub in the admin panel before logging in as a regular user.");
+        return;
+      }
+
+      let user = users.find(u => u.username === username);
+
       if (user) {
-        // Check status
-        if (user.status === "pending") {
-          document.getElementById("approvalMessage").classList.remove("hidden");
-          document.getElementById("revokedMessage").classList.add("hidden");
+        if (user.status !== "approved") {
+          alert("Your account is not approved to access the application.");
           return;
         }
-        if (user.status === "revoked") {
-          document.getElementById("approvalMessage").classList.add("hidden");
-          document.getElementById("revokedMessage").classList.remove("hidden");
-          const reason = user.revocationReason ?
-            `Reason: ${user.revocationReason}` :
-            "Please contact admin for more details.";
-          document.getElementById("revocationReason").textContent = reason;
-          return;
-        }
-        // Password check for existing users
         if (user.password && user.password !== password) {
           alert("❌ Incorrect password");
           return;
@@ -874,7 +876,7 @@
         loginUser(username, user.isAdmin);
         return;
       }
-      // New user - create pending account
+
       const newUser = {
         username,
         password,
@@ -900,9 +902,14 @@
       document.getElementById("userDisplay").textContent = username;
       if (isAdmin) {
         document.getElementById("adminDashboard").classList.remove("hidden");
-        loadAdminData();
+        // User management is hidden by default until connected
+        document.getElementById('userManagementSections').classList.add('hidden');
+        document.getElementById('githubConnectSection').classList.remove('hidden');
       } else {
-        alert("Regular users can access the system, but this demo only shows admin features.");
+        // Hide admin dashboard for non-admin users
+        document.getElementById("adminDashboard").classList.add("hidden");
+        // Show only the SmartSignal widget for regular users
+        document.querySelector('.smartsignal-widget').classList.remove('hidden');
       }
     }
 
@@ -1102,15 +1109,7 @@
       document.body.classList.toggle("theme-red");
     }
 
-    window.onload = () => {
-      // On page load, try to connect to GitHub automatically if PAT is available.
-      // This is still not recommended for production, but follows user request.
-      const pat = localStorage.getItem('githubPat');
-      if (pat) {
-        document.getElementById('githubPat').value = pat;
-        connectToGitHub();
-      }
-    };
+    window.onload = () => {};
 
     // SmartSignal Pro Code
     const OPENROUTER_API_KEY = "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";
@@ -1363,7 +1362,7 @@ Volume: ${volumeImbalance}
           const aiText = response.data.choices[0].message.content.trim();
           document.getElementById("aiInsight").textContent = aiText;
         } catch (err) {
-          console.error("AI Error:", err);
+          console.error("AI API Error:", err);
           const fallback = `Strong ${isBullish ? 'bullish' : 'bearish'} setup in ${symbol} at $${price.toFixed(2)}. ${confluenceCount} confluence factors. Entry: $${entry}, SL: $${sl}, TP1: $${tp1}. FVG at $${fvgZone[0]}–${fvgZone[1]}. ${volumeImbalance}. Institutional-grade opportunity.`;
           document.getElementById("aiInsight").textContent = fallback;
         }
