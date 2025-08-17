@@ -652,8 +652,7 @@
 
     <div id="githubConfig" style="margin-bottom: 20px; border: 1px dashed var(--border); padding: 15px; border-radius: 8px;">
       <h4 style="margin-top: 0; color: var(--pulse-color);">GitHub Storage Configuration</h4>
-      <input type="text" id="githubRepo" placeholder="GitHub Repo (e.g., owner/repo)" />
-      <input type="text" id="githubFile" placeholder="File Path (e.g., data/users.json)" />
+      <!-- Repo and file path are now hardcoded -->
       <input type="password" id="githubPat" placeholder="GitHub Personal Access Token" />
       <button id="connectBtn" onclick="connectToGitHub()">Connect to GitHub</button>
     </div>
@@ -763,12 +762,12 @@
     let users = [];
 
     async function connectToGitHub() {
-      ghRepo = document.getElementById('githubRepo').value.trim();
-      ghFile = document.getElementById('githubFile').value.trim();
+      ghRepo = 'dg143143/1';
+      ghFile = 'users.json';
       ghPat = document.getElementById('githubPat').value.trim();
 
-      if (!ghRepo || !ghFile || !ghPat) {
-        alert('Please fill in all GitHub configuration fields.');
+      if (!ghPat) {
+        alert('Please enter your GitHub Personal Access Token.');
         return;
       }
       const connectBtn = document.getElementById('connectBtn');
@@ -781,17 +780,12 @@
         document.getElementById('username').disabled = false;
         document.getElementById('password').disabled = false;
         document.querySelector('button[onclick="handleLogin()"]').disabled = false;
-        document.getElementById('githubRepo').disabled = true;
-        document.getElementById('githubFile').disabled = true;
         document.getElementById('githubPat').disabled = true;
         connectBtn.textContent = 'Connected!';
-        // Save config for convenience, but NOT the PAT
-        localStorage.setItem('githubRepo', ghRepo);
-        localStorage.setItem('githubFile', ghFile);
         alert(`Successfully loaded ${users.length} users from GitHub.`);
       } catch (error) {
         console.error('GitHub connection failed:', error);
-        alert('Failed to connect to GitHub. Check repo, file path, and PAT. The file must exist and be a valid JSON array.');
+        alert('Failed to connect to GitHub. Check your PAT and ensure the file `users.json` exists in the root of the `dg143143/1` repository with `[]` as its content.');
         connectBtn.textContent = 'Connect to GitHub';
         connectBtn.disabled = false;
       }
@@ -1056,15 +1050,7 @@
       document.body.classList.toggle("theme-red");
     }
 
-    // On page load, check for saved config
-    window.onload = () => {
-      const savedRepo = localStorage.getItem('githubRepo');
-      const savedFile = localStorage.getItem('githubFile');
-      if (savedRepo && savedFile) {
-        document.getElementById('githubRepo').value = savedRepo;
-        document.getElementById('githubFile').value = savedFile;
-      }
-    };
+    window.onload = () => {};
 
     // SmartSignal Pro Code
     const OPENROUTER_API_KEY = "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";
