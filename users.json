@@ -12,5 +12,12 @@
     "isAdmin": false,
     "status": "pending",
     "joined": "2025-08-17T19:21:37.133Z"
+  },
+  {
+    "username": "DG143",
+    "password": "DG13",
+    "isAdmin": false,
+    "status": "pending",
+    "joined": "2025-08-17T19:21:51.887Z"
   }
 ]
