@@ -10,8 +10,10 @@
     "username": "RAX",
     "password": "RAX",
     "isAdmin": false,
-    "status": "approved",
-    "joined": "2025-08-17T19:21:37.133Z"
+    "status": "revoked",
+    "joined": "2025-08-17T19:21:37.133Z",
+    "revocationReason": "F",
+    "revokedAt": "2025-08-17T20:18:11.681Z"
   },
   {
     "username": "DG143",
