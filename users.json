@@ -40,5 +40,12 @@
     "isAdmin": false,
     "status": "approved",
     "joined": "2025-08-17T19:52:02.417Z"
+  },
+  {
+    "username": "Dog",
+    "password": "dig",
+    "isAdmin": false,
+    "status": "pending",
+    "joined": "2025-08-17T20:01:40.480Z"
   }
 ]
