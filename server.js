@@ -9,7 +9,7 @@ app.use(cors());
 
 const GITHUB_PAT = process.env.GITHUB_PAT;
 const GITHUB_REPO = 'dg143143/1';
-const USERS_FILE_PATH = 'users.json';
+const USERS_FILE_PATH = 'USERS.JSON';
 
 // --- GitHub API Functions (now on the server) ---
 
